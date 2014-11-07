@@ -34,7 +34,7 @@ private:
     int score;
     
     void update(float dt);
-    void gameOver();
+    void gameOver(bool won);
     
     void generateCoins();
 };

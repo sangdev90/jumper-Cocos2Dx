@@ -12,6 +12,7 @@
 
 float a = -980;
 bool affectGravity = true;
+bool canJump = true;
 
 Scene* GameLayer::createScene(){
     auto scene = Scene::create();
@@ -28,7 +29,7 @@ bool GameLayer::init(){
     this->bgLayer = Layer::create();
     this->addChild(this->bgLayer);
     this->level = Level::createLevel(0);
-    this->level->runAction(MoveBy::create(7, Vec2(-this->level->length-1000, 0)));
+    this->level->runAction(MoveBy::create(10, Vec2(-this->level->length-1000, 0)));
     this->addChild(this->level);
     
     this->generateCoins();
@@ -43,10 +44,6 @@ bool GameLayer::init(){
     this->scLbl->setZOrder(10);
     this->addChild(this->scLbl);
     
-//    Texture2D bgTexture = Texture2D();
-//    Image bgImg ;
-//    bgImg.initWithImageFile("bg.png");
-//    bgTexture.initWithImage(&bgImg);
     int i=0;
     for (i=0;i<2;i++){
         auto bg = Sprite::create("bg.png");
@@ -71,13 +68,17 @@ bool GameLayer::init(){
 //    auto pl = this->player;
     touchListener->setSwallowTouches(true);
     touchListener->onTouchBegan = [=](Touch* touch, Event* event){
-        auto action = MoveBy::create(0.1, Vec2(0, 200));
-        auto completion = CallFunc::create([](){
-            affectGravity = true;
-        });
-        this->player->jump();
-        this->player->runAction(Sequence::create(action,completion, NULL));
-        affectGravity = false;
+        if (canJump){
+            auto action = MoveBy::create(0.1, Vec2(0, 200));
+            auto completion = CallFunc::create([](){
+                affectGravity = true;
+            });
+            this->player->jump();
+            this->player->runAction(Sequence::create(action,completion, NULL));
+            affectGravity = false;
+            canJump = false;
+        }
+//        canJump = false;
         return true;
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
@@ -90,15 +91,7 @@ void GameLayer::update(float dt){
     bool touchedGround = false;
     bool gameWon = false;
     bool catchCoin = false;
-    Rect *phB = Level::getPhysicsBoundsForLevel(0);
     Rect plR = Rect(this->player->getPosition().x, this->player->getPosition().y, this->player->getContentSize().width, 20);
-//    for (int i = 0; i < LVL_SIZE/2 ;i++){
-//        Rect r = phB[i];
-////        touchedGround = plR.intersectsRect(Rect(0,100,1000, 50));
-////        printf("rx:%f,y:%f,w:%f,h:%f",r.origin.x,r.origin.y,r.size.width,r.size.height);
-////        printf("plRx:%f,y:%f,w:%f,h:%f",plR.origin.x,plR.origin.y,plR.size.width,plR.size.height);
-//    }
-//    bool *t = &touchedGround;
     this->level->enumerateChildren("grBlock", [&](Node* node){
         Sprite *spr = (Sprite*)node;
         float offset = -this->level->getPosition().x;
@@ -115,8 +108,8 @@ void GameLayer::update(float dt){
         gameWon = plR.intersectsRect(r);
         return gameWon;
     });
-    Sprite* toRemove[40];
-    for (int i=0; i<40;i++){
+    Sprite* toRemove[100];
+    for (int i=0; i<100;i++){
         toRemove[i] = Sprite::create();
     }
     int j = 0;
@@ -131,7 +124,7 @@ void GameLayer::update(float dt){
         j++;
         return catchCoin;
     });
-    for(int i =0; i<30;i++){
+    for(int i =0; i<100;i++){
         Sprite *spr = toRemove[i];
         if (spr->getTexture()!=NULL){
             spr->removeFromParent();
@@ -141,10 +134,10 @@ void GameLayer::update(float dt){
         this->score+=1;
     }
     char scoreTxt[100] = {0};
-    sprintf(scoreTxt, "your score %d",this->score);
+    sprintf(scoreTxt, "Your score %d",this->score);
     this->scLbl->setString(scoreTxt);
     if(gameWon){
-        this->gameOver();
+        this->gameOver(true);
     }
     static float v0 = 0;
 //    allTime += dt;
@@ -152,10 +145,11 @@ void GameLayer::update(float dt){
     float y = v*dt;
     if (this->player->getPosition().y < -50 ){
         v0=0;
-        this->gameOver();
+        this->gameOver(false);
 //        this->player->setPosition(Vec2(player->getPosition().x, -100));
     }else if(touchedGround){
         v0=0;
+        canJump = true;
     }else if (affectGravity) {
         this->player->setPosition(Vec2(player->getPosition().x, player->getPosition().y+y));
         v0=v;
@@ -163,19 +157,19 @@ void GameLayer::update(float dt){
 }
 
 void GameLayer::generateCoins(){
-    for (int i=0;i<20;i++){
+    for (int i=0;i<30;i++){
         Sprite* coin = Sprite::create("coin_001.png");
         coin->setAnchorPoint(Vec2(0, 0));
-        coin->setPosition(Vec2(300*(i+1), 300));
+        coin->setPosition(Vec2(500+200*i, 300));
         coin->setZOrder(10);
         coin->setName("coin");
         this->level->addChild(coin);
     }
 }
 
-void GameLayer::gameOver(){
+void GameLayer::gameOver(bool won){
     CocosDenshion::SimpleAudioEngine::sharedEngine()->stopBackgroundMusic();
-    auto scene = EndLayer::createSceneWithWin(false);
+    auto scene = EndLayer::createSceneWithWin(won,this->score);
     auto transition = TransitionFade::create(0.4, scene);
     Director::getInstance()->replaceScene(transition);
 }

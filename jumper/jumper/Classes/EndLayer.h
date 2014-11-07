@@ -16,8 +16,10 @@ using namespace cocos2d;
 
 class EndLayer: public Layer {
 public:
-    static Scene* createSceneWithWin(bool won);
+    static Scene* createSceneWithWin(bool won,int score);
     virtual bool init();
+    
+    int score;
     CREATE_FUNC(EndLayer);
 };
 

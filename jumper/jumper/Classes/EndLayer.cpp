@@ -10,7 +10,7 @@
 #include "SimpleAudioEngine.h"
 #include "GameScene.h"
 
-Scene* EndLayer::createSceneWithWin(bool won){
+Scene* EndLayer::createSceneWithWin(bool won,int score){
     Scene *scene = Scene::create();
     EndLayer* layer = EndLayer::create();
     Sprite *bg;
@@ -29,8 +29,14 @@ Scene* EndLayer::createSceneWithWin(bool won){
     bg->setAnchorPoint(Vec2(0, 0));
     layer->addChild(bg);
     scene->addChild(layer);
-    
-    
+
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    char scoreTxt[100] = {0};
+    sprintf(scoreTxt, "your score %d",score);
+    auto scLbl = Label::createWithSystemFont(scoreTxt, "Helvetica", 60);
+    scLbl->setPosition(visibleSize.width/2, visibleSize.height-200);
+    scLbl->setZOrder(10);
+    layer->addChild(scLbl);
     return scene;
 }
 
@@ -38,6 +44,7 @@ bool EndLayer::init() {
     if (!Layer::init()){
         return false;
     }
+    Size visibleSize = Director::getInstance()->getVisibleSize();
     
     auto touchListener = EventListenerTouchOneByOne::create();
     //    auto pl = this->player;
@@ -50,7 +57,6 @@ bool EndLayer::init() {
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
     
-    Size visibleSize = Director::getInstance()->getVisibleSize();
     auto startLabel = Label::createWithSystemFont("Tap on screen to Restart", "Helvetica", 40);
     startLabel->setPosition(visibleSize.width/2, visibleSize.height/2);
     startLabel->setZOrder(10);
