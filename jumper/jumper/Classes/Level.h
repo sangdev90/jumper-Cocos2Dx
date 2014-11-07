@@ -12,12 +12,16 @@
 #include <stdio.h>
 #include "cocos2d.h"
 
+#define LVL_SIZE 10
+
 using namespace cocos2d;
 
 class Level: public Layer {
 public:
     static Level* createLevel(int lvlNum);
     float length;
+    static Rect* getPhysicsBoundsForLevel(int lvlNum);
+    
 };
 
 #endif /* defined(__jumper__Level__) */

@@ -29,8 +29,14 @@ private:
     
     Level* level;
     
+    Label* scLbl;
+    
+    int score;
+    
     void update(float dt);
     void gameOver();
+    
+    void generateCoins();
 };
 
 #endif /* defined(__jumper__GameScene__) */
